@@ -1,0 +1,88 @@
+-- ===========================
+-- 1️⃣ Departments Table
+-- ===========================
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY AUTO_INCREMENT,
+    DepartmentName VARCHAR(100) NOT NULL UNIQUE,
+    Location VARCHAR(100)
+);
+
+-- ===========================
+-- 2️⃣ Doctors Table
+-- ===========================
+CREATE TABLE Doctors (
+    DoctorID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    Phone VARCHAR(20),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+        ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+-- ===========================
+-- 3️⃣ Patients Table
+-- ===========================
+CREATE TABLE Patients (
+    PatientID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    DateOfBirth DATE NOT NULL,
+    Gender ENUM('Male','Female','Other') NOT NULL,
+    Phone VARCHAR(20) UNIQUE,
+    Email VARCHAR(100) UNIQUE,
+    Address VARCHAR(200)
+);
+
+-- ===========================
+-- 4️⃣ Appointments Table
+-- ===========================
+CREATE TABLE Appointments (
+    AppointmentID INT PRIMARY KEY AUTO_INCREMENT,
+    AppointmentDate DATETIME NOT NULL,
+    Status ENUM('Scheduled','Completed','Cancelled') DEFAULT 'Scheduled',
+    PatientID INT NOT NULL,
+    DoctorID INT NOT NULL,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    UNIQUE (PatientID, DoctorID, AppointmentDate) -- prevent double booking
+);
+
+-- ===========================
+-- 5️⃣ Treatments Table
+-- ===========================
+CREATE TABLE Treatments (
+    TreatmentID INT PRIMARY KEY AUTO_INCREMENT,
+    AppointmentID INT NOT NULL,
+    Description TEXT NOT NULL,
+    Cost DECIMAL(10,2),
+    FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- ===========================
+-- 6️⃣ Medications Table
+-- ===========================
+CREATE TABLE Medications (
+    MedicationID INT PRIMARY KEY AUTO_INCREMENT,
+    MedicationName VARCHAR(100) NOT NULL UNIQUE,
+    Dosage VARCHAR(50),
+    Manufacturer VARCHAR(100)
+);
+
+-- ===========================
+-- 7️⃣ TreatmentMedications (Many-to-Many Bridge)
+-- ===========================
+CREATE TABLE TreatmentMedications (
+    TreatmentID INT NOT NULL,
+    MedicationID INT NOT NULL,
+    Quantity INT DEFAULT 1 CHECK (Quantity > 0),
+    PRIMARY KEY (TreatmentID, MedicationID),
+    FOREIGN KEY (TreatmentID) REFERENCES Treatments(TreatmentID)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (MedicationID) REFERENCES Medications(MedicationID)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
